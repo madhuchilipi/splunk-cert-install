@@ -1,0 +1,27 @@
+- name: Ensure certs directory exists
+  win_file:
+    path: "{{ cert_dir }}"
+    state: directory
+  failed_when: false  # Prevent failure if directory already exists
+
+- name: Check if dummy certificate exists
+  win_stat:
+    path: "{{ cert_dir }}\\dummy_cert.pem"
+  register: cert_stat
+
+- name: Backup existing certificate if it exists
+  win_copy:
+    src: "{{ cert_dir }}\\dummy_cert.pem"
+    dest: "{{ cert_dir }}\\dummy_cert.pem.bak"
+  when: cert_stat.stat.exists
+  ignore_errors: true  # Continue even if backup fails
+
+- name: Install new dummy certificate
+  win_copy:
+    src: dummy_cert.pem
+    dest: "{{ cert_dir }}\\dummy_cert.pem"
+  register: install_result
+  failed_when: install_result.failed
+- name: Show install result
+  debug:
+    var: install_result

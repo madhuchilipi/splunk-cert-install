@@ -1,0 +1,4 @@
+---
+# create this file with: ansible-vault create group_vars/splunk_servers/vault.yml
+splunk_service_user: "splunk_svc"
+splunk_service_password: "S3cretP@ssw0rd"

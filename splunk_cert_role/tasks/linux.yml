@@ -1,0 +1,38 @@
+- name: Install Splunk Certificate on Linux
+  block:
+
+    - name: Ensure certs directory exists (Linux)
+      file:
+        path: "{{ cert_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if dummy certificate exists (Linux)
+      stat:
+        path: "{{ cert_dest_path }}"
+      register: cert_stat
+
+    - name: Backup existing certificate if it exists (Linux)
+      copy:
+        src: "{{ cert_dest_path }}"
+        dest: "{{ cert_backup_path }}"
+        remote_src: yes
+      when: cert_stat.stat.exists
+
+    - name: Copy new certificate to Splunk certs folder (Linux)
+      copy:
+        src: "{{ cert_source_path }}"
+        dest: "{{ cert_dest_path }}"
+        owner: splunk
+        group: splunk
+        mode: '0644'
+
+  rescue:
+
+    - name: Log failure message
+      debug:
+        msg: "Certificate installation failed on host {{ inventory_hostname }}. Please check paths and permissions."
+
+    - name: Fail the play explicitly
+      fail:
+        msg: "Certificate installation encountered an error on {{ inventory_hostname }}. Manual intervention may be required."

@@ -1,0 +1,4 @@
+cert_dir: /root/2025/splunk-install/splunk_cert_install/etc/auth/certs
+cert_source_path: /root/2025/dummy_cert.pem
+cert_dest_path: /root/2025/splunk-install/splunk_cert_install/etc/auth/certs/dummy_cert.pem
+cert_backup_path: /root/2025/splunk-install/splunk_cert_install/etc/auth/certs/dummy_cert.pem.bak

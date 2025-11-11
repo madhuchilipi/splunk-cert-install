@@ -1,0 +1,5 @@
+- name: Install Dummy Splunk Certificate
+  hosts: splunk_servers
+  become: yes
+  roles:
+    - splunk_cert_role
