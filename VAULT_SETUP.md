@@ -2,6 +2,8 @@
 
 Quick reference guide for setting up and using Ansible Vault with this project.
 
+> **Note:** This repository includes a `.vault_pass` file with the password `test_vault_password_123` for demonstration purposes only. **You MUST change this password in production environments** by creating your own secure vault password.
+
 ## Initial Setup (First Time)
 
 ### Step 1: Create Vault Password File

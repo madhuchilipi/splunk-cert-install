@@ -19,6 +19,8 @@ An Ansible playbook and role for automated Splunk certificate installation on Li
 - WinRM configured for Windows hosts (for remote installation)
 - Appropriate sudo/admin privileges
 
+> **Security Notice:** This repository includes a vault password file (`.vault_pass`) with password `test_vault_password_123` for testing/demonstration purposes. **In production, you MUST create your own secure vault password** using a strong, randomly generated password.
+
 ## Quick Start
 
 ### 1. Clone the Repository
