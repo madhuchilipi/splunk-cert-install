@@ -1,0 +1,17 @@
+---
+# Example vault file - Copy this to vault.yml and encrypt it with ansible-vault
+# To create an encrypted vault file:
+#   1. Copy this file: cp vault.yml.example vault.yml
+#   2. Edit vault.yml with your actual credentials
+#   3. Encrypt it: ansible-vault encrypt group_vars/splunk_servers/vault.yml
+#
+# Or create and edit an encrypted file directly:
+#   ansible-vault create group_vars/splunk_servers/vault.yml
+
+# Splunk service account credentials
+splunk_service_user: "splunk_svc"
+splunk_service_password: "your_secure_password_here"
+
+# Additional sensitive variables can be added here
+# cert_password: "certificate_password"
+# admin_password: "admin_password"

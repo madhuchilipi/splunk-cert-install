@@ -1,120 +1,309 @@
-# sp_cert_install
+# Splunk Certificate Installation with Ansible
 
+An Ansible playbook and role for automated Splunk certificate installation on Linux and Windows systems with integrated Ansible Vault for secure credential management.
 
+## Features
 
-## Getting started
+- Automated certificate installation for Splunk
+- Cross-platform support (Linux and Windows)
+- Secure credential management with Ansible Vault
+- Certificate backup before installation
+- Error handling and recovery
+- Role-based structure for easy reuse
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Prerequisites
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Ansible 2.9 or higher
+- Target systems with Splunk installed
+- SSH access to Linux hosts (for remote installation)
+- WinRM configured for Windows hosts (for remote installation)
+- Appropriate sudo/admin privileges
 
-## Add your files
+## Quick Start
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd splunk-cert-install
+```
+
+### 2. Set Up Ansible Vault
+
+Create a vault password file:
+
+```bash
+# Copy the example file
+cp .vault_pass.example .vault_pass
+
+# Edit it with your secure password
+nano .vault_pass
+
+# Secure the password file
+chmod 600 .vault_pass
+```
+
+### 3. Configure Vault Variables
+
+Create and encrypt your vault file with sensitive credentials:
+
+```bash
+# Copy the example vault file
+cp group_vars/splunk_servers/vault.yml.example group_vars/splunk_servers/vault.yml
+
+# Edit with your actual credentials
+nano group_vars/splunk_servers/vault.yml
+
+# Encrypt the file
+ansible-vault encrypt group_vars/splunk_servers/vault.yml
+```
+
+Alternatively, create an encrypted file directly:
+
+```bash
+ansible-vault create group_vars/splunk_servers/vault.yml
+```
+
+Add your credentials in the encrypted file:
+
+```yaml
+---
+splunk_service_user: "your_splunk_user"
+splunk_service_password: "your_secure_password"
+```
+
+### 4. Configure Inventory
+
+Edit `splunk_inventory.ini` with your Splunk servers:
+
+```ini
+[splunk_servers]
+splunk-server1.example.com
+splunk-server2.example.com
+localhost ansible_connection=local
+```
+
+### 5. Update Certificate Paths
+
+Edit `splunk_cert_role/defaults/main.yml` to match your environment:
+
+```yaml
+cert_dir: /opt/splunk/etc/auth/certs
+cert_source_path: /path/to/your/certificate.pem
+cert_dest_path: /opt/splunk/etc/auth/certs/splunk_cert.pem
+cert_backup_path: /opt/splunk/etc/auth/certs/splunk_cert.pem.bak
+```
+
+### 6. Run the Playbook
+
+With vault password file configured in ansible.cfg:
+
+```bash
+ansible-playbook cert_install_withrole.yml
+```
+
+Or specify the vault password file explicitly:
+
+```bash
+ansible-playbook cert_install_withrole.yml --vault-password-file .vault_pass
+```
+
+Or prompt for the vault password interactively:
+
+```bash
+ansible-playbook cert_install_withrole.yml --ask-vault-pass
+```
+
+## Ansible Vault Usage
+
+### Working with Vault Files
+
+**View encrypted vault file:**
+
+```bash
+ansible-vault view group_vars/splunk_servers/vault.yml
+```
+
+**Edit encrypted vault file:**
+
+```bash
+ansible-vault edit group_vars/splunk_servers/vault.yml
+```
+
+**Decrypt vault file (for editing manually):**
+
+```bash
+ansible-vault decrypt group_vars/splunk_servers/vault.yml
+```
+
+**Re-encrypt after editing:**
+
+```bash
+ansible-vault encrypt group_vars/splunk_servers/vault.yml
+```
+
+**Change vault password:**
+
+```bash
+ansible-vault rekey group_vars/splunk_servers/vault.yml
+```
+
+### Encrypting Individual Variables
+
+You can also encrypt individual variables instead of the entire file:
+
+```bash
+# Encrypt a string and add to vault.yml
+ansible-vault encrypt_string 'MySecretPassword' --name 'splunk_service_password'
+```
+
+This generates output you can paste directly into your vault.yml:
+
+```yaml
+splunk_service_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          ...encrypted content...
+```
+
+### Vault Password File Options
+
+There are multiple ways to provide the vault password:
+
+1. **Using a password file (Recommended for automation):**
+   - Set in `ansible.cfg`: `vault_password_file = .vault_pass`
+   - Or use command line: `--vault-password-file .vault_pass`
+
+2. **Interactive prompt (Recommended for manual runs):**
+   ```bash
+   ansible-playbook cert_install_withrole.yml --ask-vault-pass
+   ```
+
+3. **Environment variable:**
+   ```bash
+   export ANSIBLE_VAULT_PASSWORD_FILE=/path/to/.vault_pass
+   ansible-playbook cert_install_withrole.yml
+   ```
+
+## Project Structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/vsp01/sp_cert_install.git
-git branch -M main
-git push -uf origin main
+.
+├── ansible.cfg                          # Ansible configuration
+├── splunk_inventory.ini                 # Inventory file
+├── cert_install.yml                     # Standalone playbook
+├── cert_install_withrole.yml            # Playbook using role
+├── group_vars/
+│   └── splunk_servers/
+│       ├── vault.yml                    # Encrypted vault file
+│       └── vault.yml.example            # Example template
+├── splunk_cert_role/                    # Ansible role
+│   ├── defaults/
+│   │   └── main.yml                     # Default variables
+│   ├── files/
+│   │   └── dummy_cert.pem              # Example certificate
+│   └── tasks/
+│       ├── main.yml                     # Main task file
+│       ├── linux.yml                    # Linux-specific tasks
+│       └── windows.yml                  # Windows-specific tasks
+└── README.md                            # This file
 ```
 
-## Integrate with your tools
+## Playbooks
 
-- [ ] [Set up project integrations](https://gitlab.com/vsp01/sp_cert_install/-/settings/integrations)
+### cert_install.yml
 
-## Collaborate with your team
+Standalone playbook that directly installs certificates without using a role.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### cert_install_withrole.yml
 
-## Test and Deploy
+Uses the `splunk_cert_role` for modular and reusable certificate installation.
 
-Use the built-in continuous integration in GitLab.
+## Role Variables
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Variables can be set in `splunk_cert_role/defaults/main.yml`:
 
-***
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `cert_dir` | Directory for certificates | `/root/2025/splunk-install/splunk_cert_install/etc/auth/certs` |
+| `cert_source_path` | Source certificate path | `/root/2025/dummy_cert.pem` |
+| `cert_dest_path` | Destination certificate path | `{{ cert_dir }}/dummy_cert.pem` |
+| `cert_backup_path` | Backup certificate path | `{{ cert_dest_path }}.bak` |
 
-# Editing this README
+Vault-encrypted variables in `group_vars/splunk_servers/vault.yml`:
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+| Variable | Description |
+|----------|-------------|
+| `splunk_service_user` | Splunk service account username |
+| `splunk_service_password` | Splunk service account password |
 
-## Suggestions for a good README
+## Security Best Practices
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+1. **Never commit unencrypted credentials** to version control
+2. **Add `.vault_pass` to `.gitignore`** (already configured)
+3. **Use strong vault passwords** (minimum 20 characters, random)
+4. **Rotate vault passwords regularly** using `ansible-vault rekey`
+5. **Restrict vault password file permissions**: `chmod 600 .vault_pass`
+6. **Use separate vault files** for different environments (dev, staging, prod)
+7. **Enable `no_log: true`** in tasks that handle sensitive data
 
-## Name
-Choose a self-explaining name for your project.
+## Troubleshooting
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### Vault password incorrect
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```
+ERROR! Decryption failed (no vault secrets were found that could decrypt)
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+**Solution:** Ensure you're using the correct vault password file or entering the correct password.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### Cannot find vault password file
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```
+ERROR! The vault password file .vault_pass was not found
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+**Solution:** Create the `.vault_pass` file with your vault password.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### Permission denied on certificate files
+
+**Solution:** Ensure the playbook runs with appropriate privileges (`become: true`) and the certificate paths are correct.
+
+### Windows WinRM connection issues
+
+**Solution:** Ensure WinRM is properly configured on Windows hosts. See [Ansible Windows Setup](https://docs.ansible.com/ansible/latest/os_guide/windows_setup.html).
+
+## Testing
+
+To test the playbook without making changes:
+
+```bash
+ansible-playbook cert_install_withrole.yml --check --diff
+```
+
+To test on a single host:
+
+```bash
+ansible-playbook cert_install_withrole.yml --limit splunk-server1.example.com
+```
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+[Add your license information here]
 
+## Support
 
-ansible-vault create group_vars/splunk_servers/vault.yml
+For issues and questions, please open an issue in the repository.
 
-ansible-vault encrypt_string 'S3cretP@ssw0rd' --name 'splunk_service_password' >> group_vars/splunk_servers/vault.yml
-ansible-vault encrypt_string 'splunk_svc' --name 'splunk_service_user' >> group_vars/splunk_servers/vault.yml- 
-ansible-vault encrypt_string 'S3cretP@ssw0rd' --name 'splunk_service_password' >> group_vars/splunk_servers/vault.yml
-ansible-vault encrypt_string 'splunk_svc' --name 'splunk_service_user' >> group_vars/splunk_servers/vault.yml
+## References
 
-- name: Ensure Splunk service user exists
-  ansible.builtin.user:
-    name: "{{ splunk_service_user }}"
-    # if you need to set an encrypted password, hash it appropriately before use
-  no_log: true
-
-- name: Use Splunk service password for something (example)
-  ansible.builtin.debug:
-    msg: "Using the secret for service configuration"
-  no_log: true
-
-  ansible-playbook cert_install_withrole.yml --ask-vault-pass
-
-  export ANSIBLE_VAULT_PASSWORD_FILE=/path/to/vault_pass_file
-ansible-playbook cert_install_withrole.yml
-
-[defaults]
-vault_password_file = ~/.vault_pass.txt
+- [Ansible Documentation](https://docs.ansible.com/)
+- [Ansible Vault Documentation](https://docs.ansible.com/ansible/latest/user_guide/vault.html)
+- [Splunk Documentation](https://docs.splunk.com/)
