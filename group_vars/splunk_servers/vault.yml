@@ -1,14 +1,14 @@
-windows_service_accounts:
+ansible_windows_accounts:
   prod:
-    username: "win_prod_user"
-    password: "win_prod_pass"
+    ansible_user: "win_prod_user"
+    ansible_password: "win_prod_pass"
   nonprod:
-    username: "win_nonprod_user"
-    password: "win_nonprod_pass"
-linux_service_accounts:
+    ansible_user: "win_nonprod_user"
+    ansible_password: "win_nonprod_pass"
+ansible_linux_accounts:
   prod:
-    username: "linux_prod_user"
-    password: "linux_prod_pass"
+    ansible_user: "linux_prod_user"
+    ansible_ssh_pass: "linux_prod_pass"
   nonprod:
-    username: "linux_nonprod_user"
-    password: "linux_nonprod_pass"
+    ansible_user: "linux_nonprod_user"
+    ansible_ssh_pass: "linux_nonprod_pass"
