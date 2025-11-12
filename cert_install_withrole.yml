@@ -1,5 +1,14 @@
 - name: Install Dummy Splunk Certificate
   hosts: splunk_servers
   become: yes
-  roles:
-    - splunk_cert_role
+  vars_files:
+    - group_vars/all/vault.yml
+  tasks:
+    - name: Pick login credentials
+      set_fact:
+        ansible_user: "{{ ansible_windows_accounts[env].ansible_user if ansible_os_family == 'Windows' else ansible_linux_accounts[env].ansible_user }}"
+        ansible_password: "{{ ansible_windows_accounts[env].ansible_password if ansible_os_family == 'Windows' else omit }}"
+        ansible_ssh_pass: "{{ ansible_linux_accounts[env].ansible_ssh_pass if ansible_os_family != 'Windows' else omit }}"
+    - name: Include Splunk cert role
+      include_role:
+        name: splunk_cert_role
