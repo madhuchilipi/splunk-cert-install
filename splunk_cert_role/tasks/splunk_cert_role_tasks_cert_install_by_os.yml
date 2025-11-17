@@ -1,0 +1,96 @@
+- name: Install Splunk Certificate on Linux
+  block:
+    - name: Ensure certs directory exists (Linux)
+      file:
+        path: "{{ cert_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if dummy certificate exists (Linux)
+      stat:
+        path: "{{ cert_dest_path }}"
+      register: cert_stat
+
+    - name: Backup existing certificate if it exists (Linux)
+      copy:
+        src: "{{ cert_dest_path }}"
+        dest: "{{ cert_backup_path }}"
+        remote_src: yes
+      when: cert_stat.stat.exists
+
+    - name: Copy new certificate to Splunk certs folder (Linux)
+      copy:
+        src: "{{ cert_source_path }}"
+        dest: "{{ cert_dest_path }}"
+        owner: splunk
+        group: splunk
+        mode: '0644'
+  when: ansible_os_family == "RedHat"
+
+- name: Install Splunk Certificate on Solaris
+  block:
+    - name: Ensure certs directory exists (Solaris)
+      file:
+        path: "{{ cert_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if dummy certificate exists (Solaris)
+      stat:
+        path: "{{ cert_dest_path }}"
+      register: cert_stat
+
+    - name: Backup existing certificate if it exists (Solaris)
+      copy:
+        src: "{{ cert_dest_path }}"
+        dest: "{{ cert_backup_path }}"
+        remote_src: yes
+      when: cert_stat.stat.exists
+
+    - name: Copy new certificate to Splunk certs folder (Solaris)
+      copy:
+        src: "{{ cert_source_path }}"
+        dest: "{{ cert_dest_path }}"
+        owner: splunk
+        group: splunk
+        mode: '0644'
+  when: ansible_os_family == "Solaris"
+
+- name: Install Splunk Certificate on AIX
+  block:
+    - name: Ensure certs directory exists (AIX)
+      file:
+        path: "{{ cert_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if dummy certificate exists (AIX)
+      stat:
+        path: "{{ cert_dest_path }}"
+      register: cert_stat
+
+    - name: Backup existing certificate if it exists (AIX)
+      copy:
+        src: "{{ cert_dest_path }}"
+        dest: "{{ cert_backup_path }}"
+        remote_src: yes
+      when: cert_stat.stat.exists
+
+    - name: Copy new certificate to Splunk certs folder (AIX)
+      copy:
+        src: "{{ cert_source_path }}"
+        dest: "{{ cert_dest_path }}"
+        owner: splunk
+        group: splunk
+        mode: '0644'
+  when: ansible_os_family == "AIX"
+
+# Optional: Add a rescue block (shared or per block) for error handling as in your original file
+- name: Log failure message
+  debug:
+    msg: "Certificate installation failed on host {{ inventory_hostname }}. Please check paths and permissions."
+
+- name: Fail the play explicitly
+  fail:
+    msg: "Certificate installation encountered an error on {{ inventory_hostname }}. Manual intervention may be required."
+  when: false  # Only triggers if you set a rescue or conditional failure
